@@ -1,0 +1,18 @@
+{
+    "type": "postgres",
+    "host": "localhost",
+    "port": 5432,
+    "username": "postgres",
+    "password": "postgres",
+    "database": "kitovu_2",
+    "synchronize": true,
+    "logging": false,
+    "entities": ["src/entities/**/*.js"],
+    "migrations": ["src/migrations/**/*.js"],
+    "subscribers": ["src/subscribers/**/*.js"],
+    "cli": {
+      "entitiesDir": "src/entities",
+      "migrationsDir": "src/migrations",
+      "subscribersDir": "src/subscribers"
+    }
+  }
