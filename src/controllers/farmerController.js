@@ -1,21 +1,67 @@
 const { getRepository } = require("typeorm");
 const Farmer = require("../entities/Farmer");
+const FarmerAffiliation = require("../entities/FarmerAffiliation");
 
 const getFarmers = async (req, res) => {
-    const farmerRepository = getRepository(Farmer);
-    const { farmer_id } = req.query;
-  
+  const farmerRepository = getRepository(Farmer);
+  const farmerAffiliationRepository = getRepository(FarmerAffiliation);
+  const { farmer_id } = req.query;
+
+  try {
     if (farmer_id) {
+      // Get the basic farmer data
       const farmer = await farmerRepository.findOne({ where: { farmer_id: farmer_id } });
       if (!farmer) {
         return res.status(404).json({ message: "Farmer not found" });
       }
-      return res.json(farmer);
+      
+      // Get the affiliation data using the farmer_id field (not the primary key)
+      const affiliation = await farmerAffiliationRepository.findOne({ 
+        where: { farmer_id: farmer.farmer_id }
+      });
+      
+      // Combine farmer data with affiliation data
+      const farmerWithAffiliation = {
+        ...farmer,
+        member_of_cooperative: affiliation ? affiliation.member_of_cooperative : null,
+        cooperative_name: affiliation ? affiliation.name : null,
+        cooperative_activities: affiliation ? affiliation.activities : null
+      };
+      
+      return res.json(farmerWithAffiliation);
     }
   
+    // Get all farmers
     const farmers = await farmerRepository.find();
-    res.json(farmers);
-  };
+    
+    // Get all affiliations
+    const affiliations = await farmerAffiliationRepository.find();
+    
+    // Create a map of farmer_id to affiliation for quick lookup
+    const affiliationMap = {};
+    affiliations.forEach(affiliation => {
+      affiliationMap[affiliation.farmer_id] = affiliation;
+    });
+    
+    // Combine farmer data with affiliation data
+    const farmersWithAffiliations = farmers.map(farmer => {
+      // Look up affiliation using the farmer_id field (not the primary key)
+      const affiliation = affiliationMap[farmer.farmer_id];
+      
+      return {
+        ...farmer,
+        member_of_cooperative: affiliation ? affiliation.member_of_cooperative : null,
+        cooperative_name: affiliation ? affiliation.name : null,
+        cooperative_activities: affiliation ? affiliation.activities : null
+      };
+    });
+    
+    res.json(farmersWithAffiliations);
+  } catch (error) {
+    console.error("Error fetching farmers:", error);
+    res.status(500).json({ message: "Error fetching farmers", error: error.message });
+  }
+};
 
 const createFarmer = async (req, res) => {
   const farmerRepository = getRepository(Farmer);

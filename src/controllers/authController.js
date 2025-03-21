@@ -29,28 +29,32 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
-    const userRepository = getRepository(User);
-    const { email, password } = req.body;
-  
-    // Find user by email
-    const user = await userRepository.findOne({ where: { email } });
-    if (!user) {
-      return res.status(400).json({ message: "Invalid email or password." });
-    }
-  
-    // Check password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(400).json({ message: "Invalid email or password." });
-    }
-  
-    // Generate JWT token
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
-  
-    res.json({ toke:token, user:{email:user.email, username:user.username, role:user.username, id:user.id }});
-  };
+  const userRepository = getRepository(User);
+  const { email, password } = req.body;
+
+  // Find user by email
+  const user = await userRepository.findOne({ where: { email } });
+  if (!user) {
+    console.log("User not found");
+    return res.status(400).json({ message: "Invalid email or password." });
+  }
+
+  // Check password
+  console.log("Stored password: ", user.password);
+  console.log("Input password: ", password);
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  console.log("Password valid: ", isPasswordValid);
+  if (!isPasswordValid) {
+    return res.status(400).json({ message: "Invalid email or password." });
+  }
+
+  // Generate JWT token
+  const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, {
+    expiresIn: "1h",
+  });
+
+  res.json({ token: token, user: {email: user.email, username: user.username, role: user.role, id: user.id} });
+};
   
 
   const resetPassword = async (req, res) => {

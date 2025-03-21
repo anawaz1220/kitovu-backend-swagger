@@ -5,6 +5,7 @@ const authRoutes = require("./routes/authRoutes");
 const farmRoutes = require("./routes/farmRoutes");
 const farmerAffiliationRoutes = require("./routes/farmerAffiliationRoutes"); // Add farmer affiliation routes
 const locationRoutes = require("./routes/locationRoutes"); // Add location routes
+const cors = require("cors");
 
 const swaggerSetup = require("./swagger/swagger");
 const path = require("path");
@@ -12,6 +13,9 @@ require("dotenv").config();
 
 const app = express();
 const PORT = 3000;
+
+// Enable CORS for all routes
+app.use(cors());
 
 // Serve static files
 app.use("/images", express.static(path.join(__dirname, "../uploads")));
@@ -21,8 +25,8 @@ app.use(express.json());
 app.use("/api", authRoutes);
 app.use("/api", farmerRoutes);
 app.use("/api", farmRoutes);
-app.use("/api", farmerAffiliationRoutes); // Add farmer affiliation routes
-app.use("/api", locationRoutes); // Add location routes
+app.use("/api", farmerAffiliationRoutes);
+app.use("/api", locationRoutes); 
 
 
 
