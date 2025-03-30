@@ -80,6 +80,12 @@ router.get("/locations/farmers-count", auth, getFarmersCountByLocation);
  *           type: string
  *         required: false
  *         description: The type of crop (optional)
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: The name of the location (optional)
  *     responses:
  *       200:
  *         description: A list of locations with crop data
