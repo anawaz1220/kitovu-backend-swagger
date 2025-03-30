@@ -24,7 +24,7 @@ const { getFarmersCountByLocation, getCropsByLocation } = require("../controller
  *         schema:
  *           type: string
  *         required: true
- *         description: The type of location (e.g., LGA)
+ *         description: The type of location (e.g., LGA, Community)
  *       - in: query
  *         name: name
  *         schema:
@@ -43,15 +43,16 @@ const { getFarmersCountByLocation, getCropsByLocation } = require("../controller
  *                 properties:
  *                   name:
  *                     type: string
- *                     description: The name of the location
+ *                     description: The name of the location or community
  *                     example: Location A
  *                   farmer_count:
  *                     type: integer
- *                     description: The number of farmers inside the location
+ *                     description: The number of farmers inside the location or community
  *                     example: 10
  *                   geom:
  *                     type: object
- *                     description: The geometry of the location (optional)
+ *                     description: The geometry of the location (null for community)
+ *                     nullable: true
  *       401:
  *         description: Unauthorized (missing or invalid token)
  *       500:
@@ -73,7 +74,7 @@ router.get("/locations/farmers-count", auth, getFarmersCountByLocation);
  *         schema:
  *           type: string
  *         required: true
- *         description: The type of location (e.g., LGA)
+ *         description: The type of location (e.g., LGA, Community)
  *       - in: query
  *         name: crop
  *         schema:
@@ -98,26 +99,27 @@ router.get("/locations/farmers-count", auth, getFarmersCountByLocation);
  *                 properties:
  *                   name:
  *                     type: string
- *                     description: The name of the location
+ *                     description: The name of the location or community
  *                     example: Location A
  *                   farms_count:
  *                     type: integer
- *                     description: The number of farms in the location
+ *                     description: The number of farms in the location or community
  *                     example: 5
  *                   crop_area:
  *                     type: number
  *                     format: double
- *                     description: The total area of the crop in the location (in acres)
+ *                     description: The total area of the crop in the location or community (in acres)
  *                     example: 100.5
  *                   geom:
  *                     type: object
- *                     description: The geometry of the location (optional)
+ *                     description: The geometry of the location (null for community)
+ *                     nullable: true
  *       401:
  *         description: Unauthorized (missing or invalid token)
  *       500:
  *         description: Internal server error
  */
 
-router.get("/locations/crops", auth, getCropsByLocation); // Add the new endpoint
+router.get("/locations/crops", auth, getCropsByLocation);
 
 module.exports = router;

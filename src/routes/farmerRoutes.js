@@ -72,7 +72,7 @@ router.get("/farmers", auth, farmerController.getFarmers);
  *                 type: string
  *               lga:
  *                 type: string
- *               city:
+ *               ward:
  *                 type: string
  *               id_type:
  *                 type: string
@@ -160,7 +160,7 @@ router.post(
  *                 type: string
  *               lga:
  *                 type: string
- *               city:
+ *               ward:
  *                 type: string
  *               id_type:
  *                 type: string
