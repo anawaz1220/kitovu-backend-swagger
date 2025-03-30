@@ -52,7 +52,7 @@ const getFarmersCountByLocation = async (req, res) => {
 
 const getCropsByLocation = async (req, res) => {
     const locationRepository = AppDataSource.getRepository(Location);
-    const { type, crop } = req.query;
+    const { type, crop, name } = req.query;
   
     try {
       // Build the query using TypeORM's query builder
@@ -77,6 +77,10 @@ const getCropsByLocation = async (req, res) => {
       }
       if (crop) {
         query.andWhere("f.crop_type ILIKE :crop", { crop: `%${crop}%` });
+      }
+      // Add name filter to match the functionality in getFarmersCountByLocation
+      if (name) {
+        query.andWhere("l.name ILIKE :name", { name: `%${name}%` });
       }
   
       // Execute the query
