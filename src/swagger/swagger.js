@@ -91,7 +91,7 @@ const options = {
               maxLength: 100,
               nullable: true,
             },
-            city: {
+            ward: {
               type: "string",
               maxLength: 100,
               nullable: true,

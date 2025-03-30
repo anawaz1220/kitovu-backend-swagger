@@ -23,6 +23,8 @@ const getFarmers = async (req, res) => {
         // Combine farmer data with affiliation data
         const farmerWithAffiliation = {
           ...farmer,
+          ward: farmer.city, 
+          city: undefined,  
           member_of_cooperative: affiliation ? affiliation.member_of_cooperative : null,
           cooperative_name: affiliation ? affiliation.name : null,
           cooperative_activities: affiliation ? affiliation.activities : null
@@ -48,6 +50,8 @@ const getFarmers = async (req, res) => {
         const affiliation = affiliationMap[farmer.farmer_id]; 
         return {
           ...farmer,
+          ward: farmer.city, 
+          city: undefined,  
           member_of_cooperative: affiliation ? affiliation.member_of_cooperative : null,
           cooperative_name: affiliation ? affiliation.name : null,
           cooperative_activities: affiliation ? affiliation.activities : null
