@@ -81,6 +81,6 @@ router.get("/cooperative-names", auth, getDistinctCooperativeNames);
  *         description: Internal server error
  */
 
-router.put("/farmer-affiliation", auth, updateFarmerAffiliation); // Add the update endpoint
+router.put("/farmer-affiliation", auth, updateFarmerAffiliation);
 
 module.exports = router;

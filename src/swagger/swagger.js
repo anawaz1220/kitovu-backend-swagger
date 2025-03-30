@@ -14,6 +14,28 @@ const options = {
         url: "http://localhost:3000",
       },
     ],
+    tags: [
+      {
+        name: "Auth",
+        description: "Authentication endpoints"
+      },
+      {
+        name: "Farmers",
+        description: "Farmer management"
+      },
+      {
+        name: "Farmer Affiliation",
+        description: "Farmer affiliation management"
+      },
+      {
+        name: "Farms",
+        description: "Farm management"
+      },
+      {
+        name: "Location",
+        description: "Location data management"
+      }
+    ],
     components: {
         securitySchemes: {
             bearerAuth: {
@@ -130,6 +152,45 @@ const options = {
               nullable: true,
             },
             validated_by: {
+              type: "string",
+              nullable: true,
+            },
+          },
+        },
+        FarmerAffiliation: {
+          type: "object",
+          properties: {
+            id: {
+              type: "string",
+              format: "uuid",
+              description: "Auto-generated UUID",
+            },
+            farmer_id: {
+              type: "string",
+              format: "uuid",
+              description: "ID of the farmer",
+            },
+            member_of_cooperative: {
+              type: "boolean",
+              description: "Whether the farmer is a member of a cooperative",
+            },
+            name: {
+              type: "string",
+              description: "Name of the cooperative",
+            },
+            activities: {
+              type: "string",
+              description: "Activities of the cooperative",
+            },
+            created_at: {
+              type: "string",
+              format: "date-time",
+            },
+            updated_at: {
+              type: "string",
+              format: "date-time",
+            },
+            created_by: {
               type: "string",
               nullable: true,
             },

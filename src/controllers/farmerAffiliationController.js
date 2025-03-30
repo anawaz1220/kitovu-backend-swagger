@@ -1,10 +1,10 @@
-const { getRepository } = require("typeorm");
+const AppDataSource = require("../data-source");
 const FarmerAffiliation = require("../entities/FarmerAffiliation");
 const Farmer = require("../entities/Farmer");
 
 
 const getDistinctCooperativeNames = async (req, res) => {
-  const farmerAffiliationRepository = getRepository(FarmerAffiliation);
+  const farmerAffiliationRepository = AppDataSource.getRepository(FarmerAffiliation);
 
   try {
     const names = await farmerAffiliationRepository
@@ -24,10 +24,10 @@ const getDistinctCooperativeNames = async (req, res) => {
 
 
 const updateFarmerAffiliation = async (req, res) => {
-    const farmerAffiliationRepository = getRepository(FarmerAffiliation);
+    const farmerAffiliationRepository = AppDataSource.getRepository(FarmerAffiliation);
     const { farmer_id, member_of_cooperative, name, activities } = req.body;
-    const created_by = req.user.username; // Get the logged-in user's username from the JWT token
-    const farmerRepository = getRepository(Farmer);
+    const created_by = req.user.username || req.user.email;
+    const farmerRepository = AppDataSource.getRepository(Farmer);
   
     try {
 

@@ -59,6 +59,7 @@ router.post("/login", login);
  * /api/reset-password:
  *   post:
  *     summary: Reset the logged-in user's password
+ *     description: Allows a logged-in user to change their password. This endpoint should be available from the profile dropdown menu in the UI.
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
@@ -68,14 +69,29 @@ router.post("/login", login);
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - currentPassword
+ *               - newPassword
  *             properties:
  *               currentPassword:
  *                 type: string
+ *                 description: The user's current password
+ *                 example: KitovuTemp123!
  *               newPassword:
  *                 type: string
+ *                 description: The new password to set
+ *                 example: MyNewSecurePassword123!
  *     responses:
  *       200:
  *         description: Password reset successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Password reset successfully.
  *       400:
  *         description: Current password is incorrect
  *       401:

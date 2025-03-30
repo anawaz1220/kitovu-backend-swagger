@@ -1,11 +1,11 @@
-const { getRepository } = require("typeorm");
+const AppDataSource = require("../data-source");
 const Farm = require("../entities/Farm");
 const Farmer = require("../entities/Farmer");
 
 
 const createFarm = async (req, res) => {
-  const farmRepository = getRepository(Farm);
-  const farmerRepository = getRepository(Farmer);
+  const farmRepository = AppDataSource.getRepository(Farm);
+  const farmerRepository = AppDataSource.getRepository(Farmer);
   const {
     farmer_id,
     draw_farm,
@@ -21,21 +21,25 @@ const createFarm = async (req, res) => {
   } = req.body;
 
   try {
-    // Check if the farmer exists
+    // Check if the farmer exists using farmer_id field
     const farmer = await farmerRepository.findOne({ where: { farmer_id: farmer_id } });
     if (!farmer) {
       return res.status(404).json({ message: "Farmer does not exist." });
     }
 
     // Validate GeoJSON
-    console.log( typeof draw_farm, 'draw farm type');
+    console.log(typeof draw_farm, 'draw farm type');
     
-    // if (!draw_farm || typeof draw_farm !== "string") {
-    //   return res.status(400).json({ message: "Invalid or missing GeoJSON data." });
-    // }
+    // Convert string to object if needed
+    let geojson = draw_farm;
+    if (typeof draw_farm === "string") {
+      try {
+        geojson = JSON.parse(draw_farm);
+      } catch (e) {
+        return res.status(400).json({ message: "Invalid GeoJSON format - parsing error." });
+      }
+    }
 
-    // Parse GeoJSON and calculate area
-    const geojson = draw_farm;
     if (
       !geojson.type ||
       !geojson.features ||
@@ -46,18 +50,18 @@ const createFarm = async (req, res) => {
     }
 
     // Calculate area in acres
-    const areaInSquareMeters = calculateArea(geojson); // Implement this function
+    const areaInSquareMeters = calculateArea(geojson);
     const calculatedArea = areaInSquareMeters / 4046.86; // Convert to acres
 
     // Create the farm entity
     const farm = farmRepository.create({
       farmer_id,
-      Draw_Farm: geojson, // Store the GeoJSON as text
+      Draw_Farm: JSON.stringify(geojson), // Store the GeoJSON as text
       farm_type,
       ownership_status,
       lease_years,
       lease_months,
-      calculated_area: calculatedArea, // Store the calculated area
+      calculated_area: calculatedArea,
       crop_type,
       livestock_type,
       number_of_animals,
@@ -68,7 +72,7 @@ const createFarm = async (req, res) => {
     // Save the farm entity
     await farmRepository.save(farm);
 
-    res.status(201).json(farm); // Return the inserted farm
+    res.status(201).json(farm);
   } catch (error) {
     console.error("Error creating farm:", error);
     res.status(500).json({ message: "Error creating farm.", error: error.message });
@@ -86,7 +90,7 @@ const calculateArea = (geojson) => {
 
 
   const getFarms = async (req, res) => {
-    const farmRepository = getRepository(Farm);
+    const farmRepository = AppDataSource.getRepository(Farm);
     const { farm_id, farmer_id, crop_type } = req.query;
   
     try {

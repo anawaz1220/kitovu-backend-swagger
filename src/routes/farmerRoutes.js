@@ -1,11 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const auth = require("../middleware/auth"); // Import the auth middleware
-
+const auth = require("../middleware/auth");
 const upload = require("../middleware/multer");
-const { getFarmers, createFarmer, updateFarmer, deleteFarmer } = require("../controllers/farmerController");
-router.use(auth);
-
+const farmerController = require("../controllers/farmerController");
 
 /**
  * @swagger
@@ -39,7 +36,7 @@ router.use(auth);
  *               items:
  *                 $ref: '#/components/schemas/Farmer'
  */
-router.get("/farmers", auth, getFarmers);
+router.get("/farmers", auth, farmerController.getFarmers);
 
 /**
  * @swagger
@@ -114,11 +111,12 @@ router.get("/farmers", auth, getFarmers);
  */
 router.post(
   "/farmers",
+  auth,
   upload.fields([
     { name: "farmer_picture", maxCount: 1 },
     { name: "id_document_picture", maxCount: 1 },
   ]),
-  createFarmer
+  farmerController.createFarmer
 );
 
 /**
@@ -201,14 +199,14 @@ router.post(
  *       404:
  *         description: Farmer not found
  */
-
 router.put(
   "/farmers/:id",
+  auth,
   upload.fields([
     { name: "farmer_picture", maxCount: 1 },
     { name: "id_document_picture", maxCount: 1 },
   ]),
-  updateFarmer
+  farmerController.updateFarmer
 );
 
 /**
@@ -232,6 +230,6 @@ router.put(
  *       404:
  *         description: Farmer not found
  */
-router.delete("/farmers/:id", deleteFarmer);
+router.delete("/farmers/:id", auth, farmerController.deleteFarmer);
 
 module.exports = router;

@@ -1,11 +1,11 @@
-const { getRepository } = require("typeorm");
+const AppDataSource = require("../data-source");
 const Location = require("../entities/Location");
 const Farmer = require("../entities/Farmer");
 const Farm = require("../entities/Farm");
 
 
 const getFarmersCountByLocation = async (req, res) => {
-  const locationRepository = getRepository(Location);
+  const locationRepository = AppDataSource.getRepository(Location);
   const { type, name } = req.query;
 
   try {
@@ -51,7 +51,7 @@ const getFarmersCountByLocation = async (req, res) => {
 
 
 const getCropsByLocation = async (req, res) => {
-    const locationRepository = getRepository(Location);
+    const locationRepository = AppDataSource.getRepository(Location);
     const { type, crop } = req.query;
   
     try {
@@ -97,4 +97,4 @@ const getCropsByLocation = async (req, res) => {
     }
   };
 
-module.exports = { getFarmersCountByLocation,getCropsByLocation };
+module.exports = { getFarmersCountByLocation, getCropsByLocation };
