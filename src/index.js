@@ -3,8 +3,9 @@ const connectDB = require("./config/database");
 const farmerRoutes = require("./routes/farmerRoutes");
 const authRoutes = require("./routes/authRoutes");
 const farmRoutes = require("./routes/farmRoutes");
-const farmerAffiliationRoutes = require("./routes/farmerAffiliationRoutes"); // Add farmer affiliation routes
-const locationRoutes = require("./routes/locationRoutes"); // Add location routes
+const farmerAffiliationRoutes = require("./routes/farmerAffiliationRoutes"); 
+const locationRoutes = require("./routes/locationRoutes");
+const advisoryRoutes = require("./routes/advisoryRoutes");
 const cors = require("cors");
 
 const swaggerSetup = require("./swagger/swagger");
@@ -27,7 +28,7 @@ app.use("/api", farmerRoutes);
 app.use("/api", farmRoutes);
 app.use("/api", farmerAffiliationRoutes);
 app.use("/api", locationRoutes); 
-
+app.use("/api", advisoryRoutes);
 
 
 // Database connection
