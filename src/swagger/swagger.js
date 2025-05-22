@@ -1,3 +1,4 @@
+// Update to swagger.js
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
 
@@ -7,7 +8,7 @@ const options = {
     info: {
       title: "Farmer API",
       version: "1.0.0",
-      description: "API for managing farmers and farm advisory services",
+      description: "API for managing farmers and agricultural advisory services",
     },
     servers: [
       {
@@ -37,17 +38,18 @@ const options = {
       },
       {
         name: "Advisory",
-        description: "Agricultural advisory services"
+        description: "Agricultural advisory services including crop health and fertilizer recommendations"
       }
     ],
+
     components: {
-        securitySchemes: {
-            bearerAuth: {
-              type: "http",
-              scheme: "bearer",
-              bearerFormat: "JWT",
-            },
-          },
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
       schemas: {
         Farmer: {
           type: "object",
@@ -159,6 +161,75 @@ const options = {
               type: "string",
               nullable: true,
             },
+            // New fields
+            education: {
+              type: "string",
+              maxLength: 100,
+              nullable: true,
+            },
+            agricultural_training: {
+              type: "boolean",
+              nullable: true,
+            },
+            training_provider: {
+              type: "string",
+              maxLength: 255,
+              nullable: true,
+            },
+            certificate_issued: {
+              type: "boolean",
+              nullable: true,
+            },
+            received_financing: {
+              type: "boolean",
+              nullable: true,
+            },
+            finance_provider: {
+              type: "string",
+              maxLength: 255,
+              nullable: true,
+            },
+            finance_amount: {
+              type: "number",
+              format: "double",
+              nullable: true,
+            },
+            interest_rate: {
+              type: "number",
+              format: "double",
+              nullable: true,
+            },
+            financing_duration_years: {
+              type: "integer",
+              nullable: true,
+            },
+            financing_duration_months: {
+              type: "integer",
+              nullable: true,
+            },
+            // Related affiliation fields
+            member_of_cooperative: {
+              type: "boolean",
+              nullable: true,
+            },
+            cooperative_name: {
+              type: "string",
+              nullable: true,
+            },
+            cooperative_activities: {
+              type: "string",
+              nullable: true,
+            },
+            marketing_channel: {
+              type: "string",
+              maxLength: 100,
+              nullable: true,
+            },
+            offtaker_name: {
+              type: "string",
+              maxLength: 255,
+              nullable: true,
+            },
           },
         },
         FarmerAffiliation: {
@@ -198,121 +269,120 @@ const options = {
               type: "string",
               nullable: true,
             },
+            // New fields
+            marketing_channel: {
+              type: "string",
+              maxLength: 100,
+              nullable: true,
+              description: "Marketing channel used by the farmer",
+            },
+            offtaker_name: {
+              type: "string",
+              maxLength: 255,
+              nullable: true,
+              description: "Name of the offtaker",
+            },
           },
         },
-        CropHealthResponse: {
+        // Add Farm schema with new fields
+        Farm: {
           type: "object",
           properties: {
-            farm_id: {
+            id: {
               type: "string",
               format: "uuid",
-              description: "ID of the farm"
+              description: "Auto-generated UUID",
             },
-            analysis_date: {
+            farmer_id: {
+              type: "string",
+              description: "ID of the farmer",
+            },
+            farm_id: {
+              type: "integer",
+              description: "Auto-incremented farm ID",
+            },
+            Draw_Farm: {
+              type: "object",
+              description: "GeoJSON representation of the farm boundary",
+            },
+            farm_type: {
+              type: "string",
+              maxLength: 100,
+              description: "Type of the farm (e.g., Crops, Livestock)",
+            },
+            ownership_status: {
+              type: "string",
+              maxLength: 50,
+              description: "Ownership status (e.g., Owned, Leased)",
+            },
+            lease_years: {
+              type: "integer",
+              description: "Number of years on lease (if applicable)",
+            },
+            lease_months: {
+              type: "integer",
+              description: "Number of months on lease (if applicable)",
+            },
+            calculated_area: {
+              type: "number",
+              format: "double",
+              description: "Calculated area of the farm in acres",
+            },
+            crop_type: {
+              type: "string",
+              maxLength: 100,
+              description: "Type of crops grown on the farm",
+            },
+            area: {
+              type: "number",
+              format: "double",
+              description: "Area of the farm",
+            },
+            livestock_type: {
+              type: "string",
+              maxLength: 100,
+              description: "Type of livestock present on the farm",
+            },
+            number_of_animals: {
+              type: "integer",
+              description: "Number of animals on the farm (if applicable)",
+            },
+            farm_latitude: {
+              type: "number",
+              format: "double",
+              description: "Latitude coordinate of the farm's central point",
+            },
+            farm_longitude: {
+              type: "number",
+              format: "double",
+              description: "Longitude coordinate of the farm's central point",
+            },
+            created_at: {
               type: "string",
               format: "date-time",
-              description: "Date when the analysis was performed"
             },
-            crop: {
+            updated_at: {
               type: "string",
-              description: "Type of crop"
+              format: "date-time",
             },
-            growth_stage: {
-              type: "string",
-              description: "Current growth stage of the crop"
+            // New fields
+            distance_to_farm_km: {
+              type: "number",
+              format: "double",
+              description: "Distance to the farm in kilometers",
             },
-            overall_health_index: {
-              type: "integer",
-              description: "Overall health index (0-100)"
+            crop_yield: {
+              type: "number",
+              format: "double",
+              description: "Crop yield information",
             },
-            status: {
-              type: "string",
-              description: "Overall health status"
+            livestock_yield: {
+              type: "number",
+              format: "double",
+              description: "Livestock yield information",
             },
-            ndvi_analysis: {
-              type: "object",
-              properties: {
-                average_ndvi: {
-                  type: "number",
-                  format: "float",
-                  description: "Average NDVI value"
-                },
-                min_ndvi: {
-                  type: "number",
-                  format: "float",
-                  description: "Minimum NDVI value"
-                },
-                max_ndvi: {
-                  type: "number",
-                  format: "float",
-                  description: "Maximum NDVI value"
-                },
-                zones: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      zone_id: {
-                        type: "integer",
-                        description: "Zone identifier"
-                      },
-                      status: {
-                        type: "string",
-                        description: "Health status of the zone"
-                      },
-                      ndvi_range: {
-                        type: "string",
-                        description: "NDVI value range"
-                      },
-                      area_percentage: {
-                        type: "number",
-                        format: "float",
-                        description: "Percentage of the total area"
-                      },
-                      area_hectares: {
-                        type: "number",
-                        format: "float",
-                        description: "Area in hectares"
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            alerts: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  severity: {
-                    type: "string",
-                    description: "Severity of the alert (low, medium, high)"
-                  },
-                  type: {
-                    type: "string",
-                    description: "Type of the alert"
-                  },
-                  description: {
-                    type: "string",
-                    description: "Description of the alert"
-                  },
-                  affected_area_percentage: {
-                    type: "number",
-                    format: "float",
-                    description: "Percentage of affected area"
-                  }
-                }
-              }
-            },
-            recommendations: {
-              type: "array",
-              items: {
-                type: "string",
-                description: "Recommendation for action"
-              }
-            }
-          }
-        }
+          },
+        },
       },
     },
   },

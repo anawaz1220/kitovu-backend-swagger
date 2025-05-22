@@ -1,3 +1,4 @@
+// Update to Farm.js
 const { EntitySchema } = require("typeorm");
 
 module.exports = new EntitySchema({
@@ -87,6 +88,25 @@ module.exports = new EntitySchema({
       type: "timestamp",
       default: () => "CURRENT_TIMESTAMP",
       onUpdate: "CURRENT_TIMESTAMP",
+    },
+    // New fields
+    distance_to_farm_km: {
+      type: "numeric",
+      precision: 10,
+      scale: 2,
+      nullable: true,
+    },
+    crop_yield: {
+      type: "numeric",
+      precision: 15,
+      scale: 2,
+      nullable: true,
+    },
+    livestock_yield: {
+      type: "numeric",
+      precision: 15,
+      scale: 2,
+      nullable: true,
     },
   },
 });

@@ -1,3 +1,4 @@
+// Update to farmerAffiliationRoutes.js
 const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/auth");
@@ -5,7 +6,6 @@ const {
   getDistinctCooperativeNames,
   updateFarmerAffiliation,
 } = require("../controllers/farmerAffiliationController");
-
 
 /**
  * @swagger
@@ -68,6 +68,14 @@ router.get("/cooperative-names", auth, getDistinctCooperativeNames);
  *                 type: string
  *                 description: Activities of the cooperative
  *                 example: Farming, Marketing
+ *               marketing_channel:
+ *                 type: string
+ *                 description: Marketing channel used by the farmer
+ *                 example: Direct sales
+ *               offtaker_name:
+ *                 type: string
+ *                 description: Name of the offtaker
+ *                 example: Local Distributor Ltd
  *     responses:
  *       200:
  *         description: Farmer affiliation updated or created successfully
@@ -80,7 +88,6 @@ router.get("/cooperative-names", auth, getDistinctCooperativeNames);
  *       500:
  *         description: Internal server error
  */
-
 router.put("/farmer-affiliation", auth, updateFarmerAffiliation);
 
 module.exports = router;

@@ -1,3 +1,4 @@
+// Update to FarmerAffiliation.js
 const { EntitySchema } = require("typeorm");
 
 module.exports = new EntitySchema({
@@ -41,6 +42,17 @@ module.exports = new EntitySchema({
     },
     created_by: {
       type: "text",
+      nullable: true,
+    },
+    // New fields
+    marketing_channel: {
+      type: "varchar",
+      length: 100,
+      nullable: true,
+    },
+    offtaker_name: {
+      type: "varchar",
+      length: 255,
       nullable: true,
     },
   },
