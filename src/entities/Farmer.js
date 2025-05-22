@@ -1,3 +1,4 @@
+// Update to Farmer.js
 const { EntitySchema } = require("typeorm");
 
 module.exports = new EntitySchema({
@@ -102,6 +103,54 @@ module.exports = new EntitySchema({
     },
     validated_by: {
       type: "text",
+      nullable: true,
+    },
+    // New fields
+    education: {
+      type: "varchar",
+      length: 100,
+      nullable: true,
+    },
+    agricultural_training: {
+      type: "boolean",
+      nullable: true,
+    },
+    training_provider: {
+      type: "varchar",
+      length: 255,
+      nullable: true,
+    },
+    certificate_issued: {
+      type: "boolean",
+      nullable: true,
+    },
+    received_financing: {
+      type: "boolean",
+      nullable: true,
+    },
+    finance_provider: {
+      type: "varchar",
+      length: 255,
+      nullable: true,
+    },
+    finance_amount: {
+      type: "numeric",
+      precision: 15,
+      scale: 2,
+      nullable: true,
+    },
+    interest_rate: {
+      type: "numeric",
+      precision: 5,
+      scale: 2,
+      nullable: true,
+    },
+    financing_duration_years: {
+      type: "int",
+      nullable: true,
+    },
+    financing_duration_months: {
+      type: "int",
       nullable: true,
     },
   },

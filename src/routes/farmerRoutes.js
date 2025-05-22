@@ -1,3 +1,4 @@
+// Update to farmerRoutes.js - focusing on POST and PUT operations
 const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/auth");
@@ -55,52 +56,94 @@ router.get("/farmers", auth, farmerController.getFarmers);
  *             properties:
  *               first_name:
  *                 type: string
+ *                 example: "John"
  *               last_name:
  *                 type: string
+ *                 example: "Doe"
  *               gender:
  *                 type: string
+ *                 example: "Male"
  *               date_of_birth:
  *                 type: string
  *                 format: date
+ *                 example: "1990-01-01"
  *               phone_number:
  *                 type: string
+ *                 example: "08012345678"
  *               alternate_phone_number:
  *                 type: string
+ *                 example: "08087654321"
  *               street_address:
  *                 type: string
+ *                 example: "123 Main Street"
  *               state:
  *                 type: string
+ *                 example: "Lagos"
  *               lga:
  *                 type: string
+ *                 example: "Ikeja"
  *               ward:
  *                 type: string
+ *                 example: "Ward 5"
  *               id_type:
  *                 type: string
+ *                 example: "Voter's Card"
  *               id_number:
  *                 type: string
+ *                 example: "A1234567"
  *               user_latitude:
  *                 type: number
  *                 format: double
+ *                 example: 6.5244
  *               user_longitude:
  *                 type: number
  *                 format: double
+ *                 example: 3.3792
  *               remarks:
  *                 type: string
+ *                 example: "Active farmer"
  *               created_by:
  *                 type: string
- *               validation_time:
- *                 type: string
- *                 format: date-time
- *               validation_status:
- *                 type: string
- *               validated_by:
- *                 type: string
+ *                 example: "admin"
  *               farmer_picture:
  *                 type: string
  *                 format: binary
  *               id_document_picture:
  *                 type: string
  *                 format: binary
+ *               # New fields
+ *               education:
+ *                 type: string
+ *                 example: "Secondary"
+ *               agricultural_training:
+ *                 type: boolean
+ *                 example: true
+ *               training_provider:
+ *                 type: string
+ *                 example: "Agriculture Extension Program"
+ *               certificate_issued:
+ *                 type: boolean
+ *                 example: true
+ *               received_financing:
+ *                 type: boolean
+ *                 example: false
+ *               finance_provider:
+ *                 type: string
+ *                 example: "Agricultural Bank"
+ *               finance_amount:
+ *                 type: number
+ *                 format: double
+ *                 example: 50000.00
+ *               interest_rate:
+ *                 type: number
+ *                 format: double
+ *                 example: 5.5
+ *               financing_duration_years:
+ *                 type: integer
+ *                 example: 2
+ *               financing_duration_months:
+ *                 type: integer
+ *                 example: 6
  *     responses:
  *       201:
  *         description: Farmer created successfully
@@ -143,52 +186,94 @@ router.post(
  *             properties:
  *               first_name:
  *                 type: string
+ *                 example: "John"
  *               last_name:
  *                 type: string
+ *                 example: "Doe"
  *               gender:
  *                 type: string
+ *                 example: "Male"
  *               date_of_birth:
  *                 type: string
  *                 format: date
+ *                 example: "1990-01-01"
  *               phone_number:
  *                 type: string
+ *                 example: "08012345678"
  *               alternate_phone_number:
  *                 type: string
+ *                 example: "08087654321"
  *               street_address:
  *                 type: string
+ *                 example: "123 Main Street"
  *               state:
  *                 type: string
+ *                 example: "Lagos"
  *               lga:
  *                 type: string
+ *                 example: "Ikeja"
  *               ward:
  *                 type: string
+ *                 example: "Ward 5"
  *               id_type:
  *                 type: string
+ *                 example: "Voter's Card"
  *               id_number:
  *                 type: string
+ *                 example: "A1234567"
  *               user_latitude:
  *                 type: number
  *                 format: double
+ *                 example: 6.5244
  *               user_longitude:
  *                 type: number
  *                 format: double
+ *                 example: 3.3792
  *               remarks:
  *                 type: string
+ *                 example: "Active farmer"
  *               created_by:
  *                 type: string
- *               validation_time:
- *                 type: string
- *                 format: date-time
- *               validation_status:
- *                 type: string
- *               validated_by:
- *                 type: string
+ *                 example: "admin"
  *               farmer_picture:
  *                 type: string
  *                 format: binary
  *               id_document_picture:
  *                 type: string
  *                 format: binary
+ *               # New fields
+ *               education:
+ *                 type: string
+ *                 example: "Secondary"
+ *               agricultural_training:
+ *                 type: boolean
+ *                 example: true
+ *               training_provider:
+ *                 type: string
+ *                 example: "Agriculture Extension Program"
+ *               certificate_issued:
+ *                 type: boolean
+ *                 example: true
+ *               received_financing:
+ *                 type: boolean
+ *                 example: false
+ *               finance_provider:
+ *                 type: string
+ *                 example: "Agricultural Bank"
+ *               finance_amount:
+ *                 type: number
+ *                 format: double
+ *                 example: 50000.00
+ *               interest_rate:
+ *                 type: number
+ *                 format: double
+ *                 example: 5.5
+ *               financing_duration_years:
+ *                 type: integer
+ *                 example: 2
+ *               financing_duration_months:
+ *                 type: integer
+ *                 example: 6
  *     responses:
  *       200:
  *         description: Farmer updated successfully
