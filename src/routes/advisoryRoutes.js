@@ -1,5 +1,5 @@
 const express = require("express");
-const { getCropHealth, getFertilizerRecommendation } = require("../controllers/advisoryController");
+const { getCropHealth, getFertilizerRecommendation, getWaterStress } = require("../controllers/advisoryController");
 const auth = require("../middleware/auth");
 
 const router = express.Router();
@@ -333,5 +333,198 @@ router.get("/advisory/crop_health/:farm_id", auth, getCropHealth);
  *                   type: string
  */
 router.get("/advisory/fertilizer/:farm_id", auth, getFertilizerRecommendation);
+
+/**
+ * @swagger
+ * /api/water_stress/{farm_id}:
+ *   get:
+ *     summary: Get water stress analysis and irrigation recommendations for a farm
+ *     tags: [Advisory]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: farm_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: The farm ID
+ *     responses:
+ *       200:
+ *         description: Water stress analysis and irrigation recommendations
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 farm_id:
+ *                   type: string
+ *                   description: Unique identifier for the farm
+ *                 analysis_date:
+ *                   type: string
+ *                   format: date-time
+ *                   description: Date and time of analysis
+ *                 crop:
+ *                   type: string
+ *                   description: Type of crop grown on the farm
+ *                 overall_stress_level:
+ *                   type: string
+ *                   enum: [Very Low, Low, Moderate, High]
+ *                   description: Overall water stress level of the farm
+ *                 ndwi_analysis:
+ *                   type: object
+ *                   description: NDWI (Normalized Difference Water Index) analysis
+ *                   properties:
+ *                     average_ndwi:
+ *                       type: number
+ *                       format: double
+ *                       description: Average NDWI value across the farm
+ *                     zones:
+ *                       type: array
+ *                       description: Water stress zones within the farm
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           zone_id:
+ *                             type: integer
+ *                             description: Unique identifier for the zone
+ *                           status:
+ *                             type: string
+ *                             enum: [Very Low Stress, Low Stress, Moderate Stress, High Stress]
+ *                             description: Water stress level in this zone
+ *                           ndwi_range:
+ *                             type: string
+ *                             description: NDWI value range for this zone
+ *                           area_percentage:
+ *                             type: number
+ *                             format: double
+ *                             description: Percentage of total farm area
+ *                           area_hectares:
+ *                             type: number
+ *                             format: double
+ *                             description: Area in hectares
+ *                 weather_data:
+ *                   type: object
+ *                   description: Recent weather data and rainfall information
+ *                   properties:
+ *                     recent_rainfall:
+ *                       type: object
+ *                       properties:
+ *                         last_7_days:
+ *                           type: number
+ *                           format: double
+ *                           description: Rainfall in the last 7 days
+ *                         unit:
+ *                           type: string
+ *                           description: Unit of measurement (mm)
+ *                     rainfall_anomaly:
+ *                       type: number
+ *                       format: double
+ *                       description: Difference from expected rainfall (negative means below average)
+ *                     unit:
+ *                       type: string
+ *                       description: Unit of measurement for anomaly (mm)
+ *                 recommendations:
+ *                   type: array
+ *                   description: Irrigation and water management recommendations
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       action:
+ *                         type: string
+ *                         description: Recommended action (e.g., Irrigation, Mulching)
+ *                       urgency:
+ *                         type: string
+ *                         enum: [Low, Medium, High]
+ *                         description: Priority level of the recommendation
+ *                       target_zones:
+ *                         type: array
+ *                         items:
+ *                           type: integer
+ *                         description: Zone IDs where action should be applied
+ *                       water_quantity:
+ *                         type: number
+ *                         format: double
+ *                         description: Amount of water to apply (if applicable)
+ *                       unit:
+ *                         type: string
+ *                         description: Unit of water measurement (mm)
+ *                       description:
+ *                         type: string
+ *                         description: Detailed description of the recommendation
+ *                 data_source:
+ *                   type: string
+ *                   enum: [real, mock]
+ *                   description: Source of the data (real from APIs or mock for fallback)
+ *                 error_message:
+ *                   type: string
+ *                   description: Error message if any issues occurred during analysis
+ *                 setup_instructions:
+ *                   type: string
+ *                   description: Instructions for setting up missing API keys
+ *               example:
+ *                 farm_id: "farm_12345"
+ *                 analysis_date: "2025-04-15T10:30:00Z"
+ *                 crop: "maize"
+ *                 overall_stress_level: "Moderate"
+ *                 ndwi_analysis:
+ *                   average_ndwi: 0.18
+ *                   zones:
+ *                     - zone_id: 1
+ *                       status: "Low Stress"
+ *                       ndwi_range: "0.2-0.3"
+ *                       area_percentage: 45.7
+ *                       area_hectares: 1.14
+ *                     - zone_id: 2
+ *                       status: "Moderate Stress"
+ *                       ndwi_range: "0.1-0.2"
+ *                       area_percentage: 38.1
+ *                       area_hectares: 0.95
+ *                     - zone_id: 3
+ *                       status: "High Stress"
+ *                       ndwi_range: "-0.1-0.1"
+ *                       area_percentage: 16.2
+ *                       area_hectares: 0.41
+ *                 weather_data:
+ *                   recent_rainfall:
+ *                     last_7_days: 12.4
+ *                     unit: "mm"
+ *                   rainfall_anomaly: -8.6
+ *                   unit: "mm"
+ *                 recommendations:
+ *                   - action: "Irrigation"
+ *                     urgency: "Medium"
+ *                     target_zones: [2, 3]
+ *                     water_quantity: 12.5
+ *                     unit: "mm"
+ *                     description: "Apply 12.5mm of water to moderate and high stress areas"
+ *                   - action: "Mulching"
+ *                     urgency: "Low"
+ *                     target_zones: [3]
+ *                     description: "Apply mulch to reduce water loss in high stress areas"
+ *       404:
+ *         description: Farm not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Farm not found"
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 error:
+ *                   type: string
+ */
+router.get("/water_stress/:farm_id", auth, getWaterStress);
 
 module.exports = router;
