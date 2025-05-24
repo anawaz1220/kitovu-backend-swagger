@@ -19,11 +19,160 @@ const {
 } = require("../services/fertilizerService");
 const { classifyNutrientStatus } = require("../utils/soilClassification");
 
+// Import new water stress services
+const { 
+  getNDWIAnalysis, 
+  getOverallStressLevel, 
+  getMockNDWIAnalysis 
+} = require("../services/waterStressService");
+const { 
+  getWeatherData, 
+  getMockWeatherData, 
+  verifyWeatherConfig 
+} = require("../services/weatherService");
+const { 
+  generateIrrigationRecommendations, 
+  getMockIrrigationRecommendations 
+} = require("../services/irrigationService");
+
 // Verify environment variables on startup
 if (!verifyEnvironmentVariables()) {
   console.error("Application cannot start due to missing environment variables");
   process.exit(1);
 }
+
+/**
+ * Get water stress analysis for a farm
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const getWaterStress = async (req, res) => {
+  try {
+    const farmId = req.params.farm_id;
+    console.log(`Processing water stress request for farm ID: ${farmId}`);
+    
+    const farmRepository = AppDataSource.getRepository(Farm);
+
+    // Get farm data
+    console.log("Fetching farm data from database...");
+    const farm = await farmRepository.findOne({ 
+      where: { id: farmId },
+      select: ["id", "farmer_id", "farm_id", "Draw_Farm", "farm_type", 
+               "crop_type", "calculated_area", "farm_latitude", "farm_longitude", "geom"] 
+    });
+    
+    if (!farm) {
+      console.log(`Farm with ID ${farmId} not found`);
+      return res.status(404).json({ message: "Farm not found" });
+    }
+    
+    console.log(`Farm found: ${farm.id}, crop type: ${farm.crop_type || 'Unknown'}`);
+
+    // Calculate growth stage based on crop type
+    const growthStage = calculateGrowthStage(farm.crop_type);
+    console.log(`Calculated growth stage: ${growthStage}`);
+
+    // Set up date range for satellite imagery (last 30 days) 
+    // Fix for future dates by using proper current date
+    const endDate = new Date("2025-01-26").toISOString(); // Use fixed current date
+    const startDate = new Date("2025-01-26");
+    startDate.setDate(startDate.getDate() - 30);
+    
+    console.log(`Date range: ${startDate.toISOString()} to ${endDate}`);
+    
+    // Extract coordinates for analysis
+    const coordinates = extractCoordinates(null, farm);
+    const centerLat = coordinates.length > 0 ? coordinates[0][1] : farm.farm_latitude;
+    const centerLng = coordinates.length > 0 ? coordinates[0][0] : farm.farm_longitude;
+    
+    console.log(`Using coordinates for analysis: ${centerLat}, ${centerLng}`);
+
+    try {
+      console.log("Starting water stress analysis...");
+      
+      // Get NDWI analysis and weather data in parallel
+      const [ndwiAnalysis, weatherData] = await Promise.all([
+        getNDWIAnalysis(
+          farm.calculated_area || 1,
+          coordinates,
+          startDate.toISOString(),
+          endDate,
+          farm.crop_type
+        ),
+        getWeatherData(centerLat, centerLng)
+      ]);
+      
+      // Determine overall stress level
+      const overallStressLevel = getOverallStressLevel(ndwiAnalysis.average_ndwi);
+      
+      // Generate irrigation recommendations
+      const recommendations = generateIrrigationRecommendations(
+        ndwiAnalysis,
+        weatherData,
+        farm.crop_type,
+        growthStage
+      );
+
+      console.log(`Water stress analysis complete: Overall stress level: ${overallStressLevel}`);
+
+      // Format and send response
+      const response = {
+        farm_id: farmId,
+        analysis_date: new Date().toISOString(),
+        crop: farm.crop_type || "Unknown",
+        farm_size_acres: parseFloat((farm.calculated_area || 0).toFixed(2)),
+        farm_size_hectares: parseFloat(((farm.calculated_area || 0) * 0.404686).toFixed(2)),
+        overall_stress_level: overallStressLevel,
+        ndwi_analysis: ndwiAnalysis,
+        weather_data: weatherData,
+        recommendations
+      };
+
+      res.json(response);
+
+    } catch (error) {
+      console.error("Error in water stress analysis:", error);
+      console.log("Falling back to mock data");
+      
+      // Check if it's a weather API specific error
+      let weatherError = null;
+      if (error.message && error.message.includes("OpenWeatherMap")) {
+        weatherError = error.message;
+      }
+      
+      // Use mock data as fallback
+      const mockNdwiData = getMockNDWIAnalysis(farm.calculated_area || 1);
+      const mockWeatherData = getMockWeatherData();
+      const mockRecommendations = getMockIrrigationRecommendations();
+      const overallStressLevel = getOverallStressLevel(mockNdwiData.average_ndwi);
+      
+      const response = {
+        farm_id: farmId,
+        analysis_date: new Date().toISOString(),
+        crop: farm.crop_type || "Unknown",
+        farm_size_acres: parseFloat((farm.calculated_area || 0).toFixed(2)),
+        farm_size_hectares: parseFloat(((farm.calculated_area || 0) * 0.404686).toFixed(2)),
+        overall_stress_level: overallStressLevel,
+        ndwi_analysis: mockNdwiData,
+        weather_data: mockWeatherData,
+        recommendations: mockRecommendations,
+        data_source: "mock",
+        error_message: weatherError || error.message,
+        setup_instructions: !verifyWeatherConfig() ? 
+          "To get real weather data, add OPENWEATHER_API_KEY to your .env file. Get a free API key at https://openweathermap.org/api" : 
+          null
+      };
+      
+      res.json(response);
+    }
+  } catch (error) {
+    console.error("Error in water stress analysis:", error);
+    res.status(500).json({ 
+      message: "Error in water stress analysis", 
+      error: error.message 
+    });
+  }
+};
 
 /**
  * Get crop health analysis for a farm
@@ -308,5 +457,6 @@ const getFertilizerRecommendation = async (req, res) => {
 
 module.exports = {
   getCropHealth,
-  getFertilizerRecommendation
+  getFertilizerRecommendation,
+  getWaterStress
 };
