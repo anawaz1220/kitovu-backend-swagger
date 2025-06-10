@@ -15,7 +15,8 @@ const {
   calculateFertilizerRequirements,
   calculateApplicationSchedule,
   generateCommercialProducts,
-  getMockSoilAnalysis
+  getMockSoilAnalysis,
+  getEnhancedFertilizerRecommendations  
 } = require("../services/fertilizerService");
 const { classifyNutrientStatus } = require("../utils/soilClassification");
 
@@ -120,8 +121,8 @@ const getWaterStress = async (req, res) => {
         farm_id: farmId,
         analysis_date: new Date().toISOString(),
         crop: farm.crop_type || "Unknown",
-        farm_size_acres: parseFloat((farm.calculated_area || 0).toFixed(2)),
-        farm_size_hectares: parseFloat(((farm.calculated_area || 0) * 0.404686).toFixed(2)),
+        farm_size_acres: parseFloat((parseFloat(farm.calculated_area) || 0).toFixed(2)),
+        farm_size_hectares: parseFloat(((parseFloat(farm.calculated_area) || 0) * 0.404686).toFixed(2)),
         overall_stress_level: overallStressLevel,
         ndwi_analysis: ndwiAnalysis,
         weather_data: weatherData,
@@ -150,8 +151,8 @@ const getWaterStress = async (req, res) => {
         farm_id: farmId,
         analysis_date: new Date().toISOString(),
         crop: farm.crop_type || "Unknown",
-        farm_size_acres: parseFloat((farm.calculated_area || 0).toFixed(2)),
-        farm_size_hectares: parseFloat(((farm.calculated_area || 0) * 0.404686).toFixed(2)),
+        farm_size_acres: parseFloat((parseFloat(farm.calculated_area) || 0).toFixed(2)),
+        farm_size_hectares: parseFloat(((parseFloat(farm.calculated_area) || 0) * 0.404686).toFixed(2)),
         overall_stress_level: overallStressLevel,
         ndwi_analysis: mockNdwiData,
         weather_data: mockWeatherData,
@@ -288,7 +289,7 @@ const getCropHealth = async (req, res) => {
 const getFertilizerRecommendation = async (req, res) => {
   try {
     const farmId = req.params.farm_id;
-    console.log(`Processing fertilizer recommendation request for farm ID: ${farmId}`);
+    console.log(`Processing enhanced fertilizer recommendation request for farm ID: ${farmId}`);
     
     const farmRepository = AppDataSource.getRepository(Farm);
 
@@ -312,138 +313,172 @@ const getFertilizerRecommendation = async (req, res) => {
     const farmSizeHectares = (farm.calculated_area || 1) * 0.404686;
     console.log(`Farm size in hectares: ${farmSizeHectares}`);
 
-    // Extract coordinates for ISDA API
-    const coordinates = extractCoordinates(null, farm);
-    const centerLat = coordinates.length > 0 ? coordinates[0][1] : farm.farm_latitude;
-    const centerLng = coordinates.length > 0 ? coordinates[0][0] : farm.farm_longitude;
-    
-    console.log(`Using coordinates for soil analysis: ${centerLat}, ${centerLng}`);
-
     try {
-      // Get soil data from ISDA API for all required nutrients
-      console.log("Fetching soil nutrient data from ISDA API...");
-      const soilNutrients = [
-        "nitrogen_total",
-        "phosphorous_extractable", 
-        "potassium_extractable",
-        "magnesium_extractable",
-        "calcium_extractable",
-        "sulphur_extractable",
-        "iron_extractable"
-      ];
-
-      // Fetch all soil data in parallel
-      const soilDataPromises = soilNutrients.map(nutrient => 
-        getISDASoilData(centerLat, centerLng, nutrient)
-      );
+      // REPLACE THIS ENTIRE SECTION WITH ENHANCED ANALYSIS
+      console.log("Starting enhanced fertilizer analysis combining soil and vegetation data...");
       
-      const soilDataResults = await Promise.all(soilDataPromises);
-      console.log("All ISDA API calls completed");
+      const enhancedRecommendations = await getEnhancedFertilizerRecommendations(farm, farmSizeHectares);
+      
+      console.log(`Enhanced fertilizer analysis complete: Total quantity: ${enhancedRecommendations.recommendations.total_fertilizer_quantity} kg`);
+      console.log(`Vegetation health status: ${enhancedRecommendations.vegetation_analysis.overall_health}`);
 
-      // Process soil analysis results
-      const soilAnalysis = {};
-      soilDataResults.forEach(result => {
-        if (result.success) {
-          const classification = classifyNutrientStatus(result.elementName, result.value);
-          soilAnalysis[result.elementName] = {
-            status: classification.status,
-            value: result.value,
-            unit: result.unit,
-            name: classification.name
-          };
-          console.log(`${result.elementName}: ${result.value} ${result.unit} - Status: ${classification.status}`);
-        } else {
-          console.warn(`Failed to get data for ${result.elementName}: ${result.error}`);
-          // Use default values for failed requests
-          soilAnalysis[result.elementName] = {
-            status: "Medium",
-            value: 0,
-            unit: "mg/kg",
-            name: result.elementName.split("_")[0]
-          };
-        }
-      });
-
-      // Calculate fertilizer requirements
-      console.log("Calculating fertilizer requirements...");
-      const fertilizerCalc = calculateFertilizerRequirements(
-        soilAnalysis, 
-        farm.crop_type || "maize", 
-        farmSizeHectares
-      );
-
-      // Generate application schedule
-      const applicationSchedule = calculateApplicationSchedule(
-        fertilizerCalc.total_fertilizer_quantity,
-        farm.crop_type || "maize"
-      );
-
-      // Generate commercial product recommendations
-      const commercialProducts = generateCommercialProducts(
-        fertilizerCalc.composition,
-        fertilizerCalc.total_fertilizer_quantity
-      );
-
-      console.log(`Fertilizer calculation complete: Total quantity: ${fertilizerCalc.total_fertilizer_quantity} kg`);
-
-      // Format and send response
+      // Format and send enhanced response
       const response = {
         farm_id: farmId,
         crop: farm.crop_type || "Unknown",
         farm_size_hectares: parseFloat(farmSizeHectares.toFixed(2)),
-        soil_analysis: soilAnalysis,
-        recommendations: {
-          total_fertilizer_quantity: fertilizerCalc.total_fertilizer_quantity,
-          unit: "kg",
-          composition: fertilizerCalc.composition,
-          application_schedule: applicationSchedule
-        },
-        commercial_products: commercialProducts,
-        commentary: fertilizerCalc.commentary || "No specific deficiencies detected. Follow standard fertilization practices for optimal crop growth."
+        soil_analysis: enhancedRecommendations.soil_analysis,
+        vegetation_analysis: enhancedRecommendations.vegetation_analysis,
+        recommendations: enhancedRecommendations.recommendations,
+        commercial_products: enhancedRecommendations.commercial_products,
+        commentary: enhancedRecommendations.commentary,
+        vegetation_insights: enhancedRecommendations.vegetation_insights,
+        data_source: enhancedRecommendations.data_source
       };
 
       res.json(response);
 
     } catch (error) {
-      console.error("Error getting soil data from ISDA API:", error);
-      console.log("Falling back to mock soil data");
+      console.error("Error in enhanced fertilizer analysis:", error);
+      console.log("Falling back to traditional soil-based analysis with mock vegetation data");
       
-      // Fallback to mock data
-      const mockSoilAnalysis = getMockSoilAnalysis();
-      const fertilizerCalc = calculateFertilizerRequirements(
-        mockSoilAnalysis, 
-        farm.crop_type || "maize", 
-        farmSizeHectares
-      );
+      // FALLBACK: Use traditional approach with mock vegetation data
+      const coordinates = extractCoordinates(null, farm);
+      const centerLat = coordinates.length > 0 ? coordinates[0][1] : farm.farm_latitude;
+      const centerLng = coordinates.length > 0 ? coordinates[0][0] : farm.farm_longitude;
+      
+      console.log(`Using coordinates for soil analysis: ${centerLat}, ${centerLng}`);
 
-      const applicationSchedule = calculateApplicationSchedule(
-        fertilizerCalc.total_fertilizer_quantity,
-        farm.crop_type || "maize"
-      );
+      try {
+        // Get soil data from ISDA API for all required nutrients
+        console.log("Fetching soil nutrient data from ISDA API...");
+        const soilNutrients = [
+          "nitrogen_total",
+          "phosphorous_extractable", 
+          "potassium_extractable",
+          "magnesium_extractable",
+          "calcium_extractable",
+          "sulphur_extractable",
+          "iron_extractable"
+        ];
 
-      const commercialProducts = generateCommercialProducts(
-        fertilizerCalc.composition,
-        fertilizerCalc.total_fertilizer_quantity
-      );
+        // Fetch all soil data in parallel
+        const soilDataPromises = soilNutrients.map(nutrient => 
+          getISDASoilData(centerLat, centerLng, nutrient)
+        );
+        
+        const soilDataResults = await Promise.all(soilDataPromises);
+        console.log("All ISDA API calls completed");
 
-      const response = {
-        farm_id: farmId,
-        crop: farm.crop_type || "Unknown", 
-        farm_size_hectares: parseFloat(farmSizeHectares.toFixed(2)),
-        soil_analysis: mockSoilAnalysis,
-        recommendations: {
-          total_fertilizer_quantity: fertilizerCalc.total_fertilizer_quantity,
-          unit: "kg",
-          composition: fertilizerCalc.composition,
-          application_schedule: applicationSchedule
-        },
-        commercial_products: commercialProducts,
-        commentary: fertilizerCalc.commentary,
-        data_source: "mock",
-        error_message: error.message
-      };
+        // Process soil analysis results
+        const soilAnalysis = {};
+        soilDataResults.forEach(result => {
+          if (result.success) {
+            const classification = classifyNutrientStatus(result.elementName, result.value);
+            soilAnalysis[result.elementName] = {
+              status: classification.status,
+              value: result.value,
+              unit: result.unit,
+              name: classification.name
+            };
+            console.log(`${result.elementName}: ${result.value} ${result.unit} - Status: ${classification.status}`);
+          } else {
+            console.warn(`Failed to get data for ${result.elementName}: ${result.error}`);
+            // Use default values for failed requests
+            soilAnalysis[result.elementName] = {
+              status: "Medium",
+              value: 0,
+              unit: "mg/kg",
+              name: result.elementName.split("_")[0]
+            };
+          }
+        });
 
-      res.json(response);
+        // Calculate fertilizer requirements
+        console.log("Calculating fertilizer requirements...");
+        const fertilizerCalc = calculateFertilizerRequirements(
+          soilAnalysis, 
+          farm.crop_type || "maize", 
+          farmSizeHectares
+        );
+
+        // Generate application schedule
+        const applicationSchedule = calculateApplicationSchedule(
+          fertilizerCalc.total_fertilizer_quantity,
+          farm.crop_type || "maize"
+        );
+
+        // Generate commercial product recommendations
+        const commercialProducts = generateCommercialProducts(
+          fertilizerCalc.composition,
+          fertilizerCalc.total_fertilizer_quantity
+        );
+
+        console.log(`Fertilizer calculation complete: Total quantity: ${fertilizerCalc.total_fertilizer_quantity} kg`);
+
+        // Format and send response
+        const response = {
+          farm_id: farmId,
+          crop: farm.crop_type || "Unknown",
+          farm_size_hectares: parseFloat(farmSizeHectares.toFixed(2)),
+          soil_analysis: soilAnalysis,
+          recommendations: {
+            total_fertilizer_quantity: fertilizerCalc.total_fertilizer_quantity,
+            unit: "kg",
+            composition: fertilizerCalc.composition,
+            application_schedule: applicationSchedule
+          },
+          commercial_products: commercialProducts,
+          commentary: fertilizerCalc.commentary || "No specific deficiencies detected. Follow standard fertilization practices for optimal crop growth.",
+          data_source: "soil_only",
+          vegetation_analysis: null,
+          vegetation_insights: null,
+          error_message: "Could not retrieve vegetation data - recommendations based on soil analysis only"
+        };
+
+        res.json(response);
+
+      } catch (soilError) {
+        console.error("Error getting soil data from ISDA API:", soilError);
+        console.log("Falling back to mock soil data");
+        
+        // Fallback to mock data
+        const mockSoilAnalysis = getMockSoilAnalysis();
+        const fertilizerCalc = calculateFertilizerRequirements(
+          mockSoilAnalysis, 
+          farm.crop_type || "maize", 
+          farmSizeHectares
+        );
+
+        const applicationSchedule = calculateApplicationSchedule(
+          fertilizerCalc.total_fertilizer_quantity,
+          farm.crop_type || "maize"
+        );
+
+        const commercialProducts = generateCommercialProducts(
+          fertilizerCalc.composition,
+          fertilizerCalc.total_fertilizer_quantity
+        );
+
+        const response = {
+          farm_id: farmId,
+          crop: farm.crop_type || "Unknown", 
+          farm_size_hectares: parseFloat(farmSizeHectares.toFixed(2)),
+          soil_analysis: mockSoilAnalysis,
+          recommendations: {
+            total_fertilizer_quantity: fertilizerCalc.total_fertilizer_quantity,
+            unit: "kg",
+            composition: fertilizerCalc.composition,
+            application_schedule: applicationSchedule
+          },
+          commercial_products: commercialProducts,
+          commentary: fertilizerCalc.commentary,
+          data_source: "mock",
+          error_message: error.message
+        };
+
+        res.json(response);
+      }
     }
 
   } catch (error) {
