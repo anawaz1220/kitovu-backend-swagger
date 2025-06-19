@@ -8,7 +8,11 @@
     "dev": "nodemon src/index.js",
     "sync-users": "node src/utils/syncUsersFromFarmers.js",
     "setup": "npx typeorm-ts-node-commonjs migration:run -d src/data-source.js && node src/utils/syncUsersFromFarmers.js",
-    "start:full": "npm run setup && node src/index.js"
+    "start:full": "npm run setup && node src/index.js",
+    "migration:run": "npx typeorm-ts-node-commonjs migration:run -d src/data-source.js",
+    "migration:revert": "npx typeorm-ts-node-commonjs migration:revert -d src/data-source.js",
+    "seed:herbicides": "node src/utils/seedHerbicideData.js",
+    "setup:herbicides": "npm run migration:run && npm run seed:herbicides"
   },
   "keywords": [],
   "author": "",

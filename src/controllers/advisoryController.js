@@ -19,6 +19,7 @@ const {
   getEnhancedFertilizerRecommendations  
 } = require("../services/fertilizerService");
 const { classifyNutrientStatus } = require("../utils/soilClassification");
+const { getHerbicidePesticideRecommendations } = require("../services/herbicideService");
 
 // Import new water stress services
 const { 
@@ -36,11 +37,181 @@ const {
   getMockIrrigationRecommendations 
 } = require("../services/irrigationService");
 
+
 // Verify environment variables on startup
 if (!verifyEnvironmentVariables()) {
   console.error("Application cannot start due to missing environment variables");
   process.exit(1);
 }
+
+/**
+ * Get herbicide and pesticide recommendations for a farm
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const getHerbicidePesticide = async (req, res) => {
+  try {
+    const farmId = req.params.farm_id;
+    console.log(`Processing herbicide/pesticide request for farm ID: ${farmId}`);
+    
+    const farmRepository = AppDataSource.getRepository(Farm);
+
+    // Get farm data
+    console.log("Fetching farm data from database...");
+    const farm = await farmRepository.findOne({ 
+      where: { id: farmId },
+      select: ["id", "farmer_id", "farm_id", "crop_type", "calculated_area", 
+               "farm_latitude", "farm_longitude", "created_at"] 
+    });
+    
+    if (!farm) {
+      console.log(`Farm with ID ${farmId} not found`);
+      return res.status(404).json({ message: "Farm not found" });
+    }
+    
+    console.log(`Farm found: ${farm.id}, crop type: ${farm.crop_type || 'Unknown'}`);
+
+    // Extract request options from query parameters
+    const requestOptions = {
+      growth_stage: req.query.growth_stage,
+      planting_date: req.query.planting_date, // YYYY-MM-DD format
+      timing_preference: req.query.timing_preference, // pre-planting, pre-emergence, post-emergence
+      weed_pressure: req.query.weed_pressure, // high, medium, low
+      target_weeds: req.query.target_weeds ? req.query.target_weeds.split(',') : []
+    };
+
+    console.log("Request options:", requestOptions);
+
+    try {
+      console.log("Generating herbicide and pesticide recommendations from database...");
+      
+      // Get recommendations using the database-based herbicide service
+      const recommendations = await getHerbicidePesticideRecommendations(
+        farmId,
+        farm,
+        requestOptions
+      );
+      
+      console.log(`Database-based recommendations generated successfully for ${farm.crop_type}`);
+      
+      res.json(recommendations);
+      
+    } catch (error) {
+      console.error("Error generating herbicide/pesticide recommendations:", error);
+      
+      // Fallback to basic recommendations based on deliverable format
+      console.log("Falling back to basic recommendations");
+      
+      const farmSizeHectares = (farm.calculated_area || 1) * 0.404686;
+      const growthStage = requestOptions.growth_stage || 
+        (requestOptions.planting_date ? calculateGrowthStageFromDate(requestOptions.planting_date) : "vegetative");
+      
+      const fallbackResponse = {
+        farm_id: farmId,
+        crop: farm.crop_type || "Unknown",
+        growth_stage: growthStage,
+        farm_size_hectares: parseFloat(farmSizeHectares.toFixed(2)),
+        weed_pressure: requestOptions.weed_pressure || "medium",
+        recommendations: {
+          herbicides: [
+            {
+              herbicide_type: "atrazine",
+              active_ingredient: "Atrazine",
+              application_timing: "pre-emergence",
+              recommended_brand: {
+                name: "Sun-Atrazine",
+                concentration: "80% WP",
+                manufacturer: "Zhejiang Wynca Chemical Group Co., Ltd."
+              },
+              application_details: {
+                rate_per_hectare: "1.5-2.0 kg/ha",
+                total_quantity: parseFloat((farmSizeHectares * 1.75).toFixed(2)),
+                unit: "kg",
+                dilution_water: parseFloat((farmSizeHectares * 250).toFixed(1)),
+                dilution_unit: "L",
+                total_spray_volume: parseFloat((farmSizeHectares * 251.75).toFixed(1))
+              },
+              timing_instructions: {
+                growth_stage: "Soil treatment before crop emergence or within 2-3 weeks after crop emergence",
+                safety_period_before_harvest: "60 days"
+              },
+              target_weeds: "Annual broadleaf weeds and some grassy weeds",
+              mode_of_action: "Selective systemic"
+            },
+            {
+              herbicide_type: "glyphosate",
+              active_ingredient: "Glyphosate",
+              application_timing: "pre-planting",
+              recommended_brand: {
+                name: "Sunphosate",
+                concentration: "360 g/L",
+                manufacturer: "Zhejiang Wynca Chemical Group Co., Ltd."
+              },
+              application_details: {
+                rate_per_hectare: "2-4L/ha",
+                total_quantity: parseFloat((farmSizeHectares * 3).toFixed(2)),
+                unit: "L",
+                dilution_water: parseFloat((farmSizeHectares * 300).toFixed(1)),
+                dilution_unit: "L", 
+                total_spray_volume: parseFloat((farmSizeHectares * 303).toFixed(1))
+              },
+              timing_instructions: {
+                growth_stage: "Land preparation stage",
+                safety_period_before_harvest: "14 days"
+              },
+              target_weeds: "Annual/perennial broadleaf, grasses, shrubs",
+              mode_of_action: "Non-selective systemic"
+            }
+          ],
+          alternatives: [],
+          application_guidelines: [
+            "Calibrate spraying equipment before application",
+            "Ensure uniform coverage for best results", 
+            "Monitor weather conditions closely",
+            "Apply during calm weather conditions"
+          ],
+          safety_guidelines: [
+            "Apply herbicides when soil is moist but not waterlogged",
+            "Ensure proper calibration of spraying equipment",
+            "Follow all safety guidelines and use appropriate PPE"
+          ]
+        },
+        pesticides: [], // Placeholder for future pesticide implementation
+        data_source: "fallback",
+        error_message: error.message,
+        generated_at: new Date().toISOString()
+      };
+      
+      res.json(fallbackResponse);
+    }
+    
+  } catch (error) {
+    console.error("Error in herbicide/pesticide recommendation:", error);
+    res.status(500).json({ 
+      message: "Error in herbicide/pesticide recommendation", 
+      error: error.message 
+    });
+  }
+};
+
+/**
+ * Helper function to calculate growth stage from planting date (for fallback)
+ * @param {string} plantingDate - Planting date in YYYY-MM-DD format
+ * @returns {string} Growth stage
+ */
+const calculateGrowthStageFromDate = (plantingDate) => {
+  if (!plantingDate) return "vegetative";
+  
+  const planted = new Date(plantingDate);
+  const now = new Date();
+  const daysSincePlanting = Math.floor((now - planted) / (1000 * 60 * 60 * 24));
+  
+  if (daysSincePlanting < 0) return "pre-planting";
+  if (daysSincePlanting <= 14) return "germination";
+  if (daysSincePlanting <= 45) return "vegetative";
+  if (daysSincePlanting <= 75) return "reproductive";
+  return "maturity";
+};
 
 /**
  * Get water stress analysis for a farm
@@ -493,5 +664,6 @@ const getFertilizerRecommendation = async (req, res) => {
 module.exports = {
   getCropHealth,
   getFertilizerRecommendation,
-  getWaterStress
+  getWaterStress,
+  getHerbicidePesticide
 };
