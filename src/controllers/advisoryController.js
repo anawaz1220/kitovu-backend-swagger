@@ -20,6 +20,9 @@ const {
 } = require("../services/fertilizerService");
 const { classifyNutrientStatus } = require("../utils/soilClassification");
 const { getHerbicidePesticideRecommendations } = require("../services/herbicideService");
+const { getPesticideRecommendations, getMockPesticideRecommendations } = require("../services/pesticideService");
+const { assessPestPressure } = require("../services/pesticideService");
+
 
 // Import new water stress services
 const { 
@@ -77,7 +80,9 @@ const getHerbicidePesticide = async (req, res) => {
       planting_date: req.query.planting_date, // YYYY-MM-DD format
       timing_preference: req.query.timing_preference, // pre-planting, pre-emergence, post-emergence
       weed_pressure: req.query.weed_pressure, // high, medium, low
-      target_weeds: req.query.target_weeds ? req.query.target_weeds.split(',') : []
+      pest_pressure: req.query.pest_pressure, // high, medium, low  
+      target_weeds: req.query.target_weeds ? req.query.target_weeds.split(',') : [],
+      target_pests: req.query.target_pests ? req.query.target_pests.split(',') : []
     };
 
     console.log("Request options:", requestOptions);
@@ -85,26 +90,42 @@ const getHerbicidePesticide = async (req, res) => {
     try {
       console.log("Generating herbicide and pesticide recommendations from database...");
       
-      // Get recommendations using the database-based herbicide service
-      const recommendations = await getHerbicidePesticideRecommendations(
-        farmId,
-        farm,
-        requestOptions
-      );
+      const farmSizeHectares = (farm.calculated_area || 1) * 0.404686;
       
-      console.log(`Database-based recommendations generated successfully for ${farm.crop_type}`);
+      // Get both herbicide and pesticide recommendations in parallel
+      const [herbicideResponse, pesticideRecommendations] = await Promise.all([
+        // Get herbicide recommendations (existing functionality)
+        getHerbicidePesticideRecommendations(farmId, farm, requestOptions),
+        // Get pesticide recommendations (new functionality)
+        getPesticideRecommendations(farmId, farm, requestOptions)
+      ]);
       
-      res.json(recommendations);
+      console.log(`Database-based recommendations generated successfully`);
+      console.log(`Herbicides: ${herbicideResponse.recommendations.herbicides.length}`);
+      console.log(`Pesticides: ${pesticideRecommendations.length}`);
+      
+      // Merge the responses
+      const combinedResponse = {
+        ...herbicideResponse,
+        pesticides: pesticideRecommendations,
+        pest_pressure: requestOptions.pest_pressure || 
+          assessPestPressure(farm, requestOptions.pest_pressure, farm.crop_type, herbicideResponse.growth_stage)
+      };
+      
+      res.json(combinedResponse);
       
     } catch (error) {
       console.error("Error generating herbicide/pesticide recommendations:", error);
       
-      // Fallback to basic recommendations based on deliverable format
-      console.log("Falling back to basic recommendations");
+      // Enhanced fallback with both herbicides and pesticides
+      console.log("Falling back to enhanced recommendations with mock pesticides");
       
       const farmSizeHectares = (farm.calculated_area || 1) * 0.404686;
       const growthStage = requestOptions.growth_stage || 
         (requestOptions.planting_date ? calculateGrowthStageFromDate(requestOptions.planting_date) : "vegetative");
+      
+      // Get mock pesticide recommendations
+      const mockPesticides = getMockPesticideRecommendations(farm.crop_type || 'maize', farmSizeHectares);
       
       const fallbackResponse = {
         farm_id: farmId,
@@ -112,6 +133,7 @@ const getHerbicidePesticide = async (req, res) => {
         growth_stage: growthStage,
         farm_size_hectares: parseFloat(farmSizeHectares.toFixed(2)),
         weed_pressure: requestOptions.weed_pressure || "medium",
+        pest_pressure: requestOptions.pest_pressure || "medium",
         recommendations: {
           herbicides: [
             {
@@ -137,30 +159,6 @@ const getHerbicidePesticide = async (req, res) => {
               },
               target_weeds: "Annual broadleaf weeds and some grassy weeds",
               mode_of_action: "Selective systemic"
-            },
-            {
-              herbicide_type: "glyphosate",
-              active_ingredient: "Glyphosate",
-              application_timing: "pre-planting",
-              recommended_brand: {
-                name: "Sunphosate",
-                concentration: "360 g/L",
-                manufacturer: "Zhejiang Wynca Chemical Group Co., Ltd."
-              },
-              application_details: {
-                rate_per_hectare: "2-4L/ha",
-                total_quantity: parseFloat((farmSizeHectares * 3).toFixed(2)),
-                unit: "L",
-                dilution_water: parseFloat((farmSizeHectares * 300).toFixed(1)),
-                dilution_unit: "L", 
-                total_spray_volume: parseFloat((farmSizeHectares * 303).toFixed(1))
-              },
-              timing_instructions: {
-                growth_stage: "Land preparation stage",
-                safety_period_before_harvest: "14 days"
-              },
-              target_weeds: "Annual/perennial broadleaf, grasses, shrubs",
-              mode_of_action: "Non-selective systemic"
             }
           ],
           alternatives: [],
@@ -172,11 +170,12 @@ const getHerbicidePesticide = async (req, res) => {
           ],
           safety_guidelines: [
             "Apply herbicides when soil is moist but not waterlogged",
+            "Apply pesticides in the early morning or late evening to minimize bee exposure",
             "Ensure proper calibration of spraying equipment",
             "Follow all safety guidelines and use appropriate PPE"
           ]
         },
-        pesticides: [], // Placeholder for future pesticide implementation
+        pesticides: mockPesticides,
         data_source: "fallback",
         error_message: error.message,
         generated_at: new Date().toISOString()

@@ -12,7 +12,11 @@
     "migration:run": "npx typeorm-ts-node-commonjs migration:run -d src/data-source.js",
     "migration:revert": "npx typeorm-ts-node-commonjs migration:revert -d src/data-source.js",
     "seed:herbicides": "node src/utils/seedHerbicideData.js",
-    "setup:herbicides": "npm run migration:run && npm run seed:herbicides"
+    "setup:herbicides": "npm run migration:run && npm run seed:herbicides",
+    "migration:pesticide": "npx typeorm-ts-node-commonjs migration:run -d src/data-source.js",
+    "seed:pesticides": "node src/utils/seedPesticideData.js",
+    "setup:pesticides": "npm run migration:pesticide && npm run seed:pesticides",
+    "setup:full-advisory": "npm run migration:run && npm run seed:herbicides && npm run seed:pesticides"
   },
   "keywords": [],
   "author": "",
@@ -32,7 +36,8 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "typeorm": "^0.3.20",
-    "wellknown": "^0.5.0"
+    "wellknown": "^0.5.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.9",
