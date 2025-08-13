@@ -14,6 +14,53 @@ const farmerController = require("../controllers/farmerController");
 
 /**
  * @swagger
+ * /api/farmers/search:
+ *   get:
+ *     summary: Search farmers by name or phone number
+ *     tags: [Farmers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Search query (minimum 2 characters) - searches in first name, last name, and phone number
+ *         example: "Nwank"
+ *     responses:
+ *       200:
+ *         description: List of matching farmers (limited to 50 results)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   farmer_id:
+ *                     type: string
+ *                     description: Unique farmer identifier
+ *                     example: "d2b96bb1-9819-4590-a2a9-7436822afbfd"
+ *                   display_name:
+ *                     type: string
+ *                     description: Full name of the farmer
+ *                     example: "Nwankwere Udo"
+ *                   phone_number:
+ *                     type: string
+ *                     description: Farmer's phone number
+ *                     example: "07067662622"
+ *       400:
+ *         description: Search query too short (minimum 2 characters required)
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/farmers/search", auth, farmerController.searchFarmers);
+
+/**
+ * @swagger
  * /api/farmers:
  *   get:
  *     summary: Get all farmers or a specific farmer

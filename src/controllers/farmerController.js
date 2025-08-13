@@ -161,6 +161,57 @@ const updateFarmer = async (req, res) => {
     res.status(500).json({ message: "Error updating farmer", error: error.message });
   }
 };
+const searchFarmers = async (req, res) => {
+  try {
+    const farmerRepository = AppDataSource.getRepository(Farmer);
+    const { q } = req.query;
+
+    if (!q || q.trim().length < 2) {
+      return res.status(400).json({ 
+        message: "Search query must be at least 2 characters long" 
+      });
+    }
+
+    const searchTerm = q.trim();
+
+    // Search farmers by first_name, last_name, or phone_number
+    const farmers = await farmerRepository
+      .createQueryBuilder("farmer")
+      .select([
+        "farmer.farmer_id",
+        "farmer.first_name", 
+        "farmer.last_name",
+        "farmer.phone_number"
+      ])
+      .where(
+        "LOWER(farmer.first_name) LIKE LOWER(:searchTerm) OR " +
+        "LOWER(farmer.last_name) LIKE LOWER(:searchTerm) OR " +
+        "LOWER(CONCAT(farmer.first_name, ' ', farmer.last_name)) LIKE LOWER(:searchTerm) OR " +
+        "farmer.phone_number LIKE :phoneSearch",
+        { 
+          searchTerm: `%${searchTerm}%`,
+          phoneSearch: `%${searchTerm}%`
+        }
+      )
+      .limit(50) // Limit results for performance
+      .getMany();
+
+    // Format response for dropdown
+    const searchResults = farmers.map(farmer => ({
+      farmer_id: farmer.farmer_id,
+      display_name: `${farmer.first_name} ${farmer.last_name}`,
+      phone_number: farmer.phone_number
+    }));
+
+    res.json(searchResults);
+  } catch (error) {
+    console.error("Error searching farmers:", error);
+    res.status(500).json({ 
+      message: "Error searching farmers", 
+      error: error.message 
+    });
+  }
+};
 
 const deleteFarmer = async (req, res) => {
   try {
@@ -174,4 +225,4 @@ const deleteFarmer = async (req, res) => {
   }
 };
 
-module.exports = { getFarmers, createFarmer, updateFarmer, deleteFarmer };
+module.exports = { getFarmers, createFarmer, updateFarmer, deleteFarmer, searchFarmers  };
