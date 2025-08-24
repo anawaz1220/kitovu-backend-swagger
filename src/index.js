@@ -19,8 +19,8 @@ const PORT = 3000;
 app.use(cors());
 
 // Serve static files
-// app.use("/images", express.static(path.join(__dirname, "../uploads")));
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+app.use("/images", express.static(path.join(__dirname, "../uploads")));
+// app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use(express.json());
 
 // Routes
