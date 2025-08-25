@@ -448,11 +448,82 @@ const getAbiaLGAsBoundaries = async (req, res) => {
   }
 };
 
+// Get Abia State Farmers Locations for Map Clustering
+const getAbiaFarmersLocations = async (req, res) => {
+  const farmerRepository = AppDataSource.getRepository(Farmer);
+
+  try {
+    const farmers = await farmerRepository
+      .createQueryBuilder("f")
+      .select([
+        "f.farmer_id AS farmer_id",
+        "f.user_latitude AS latitude", 
+        "f.user_longitude AS longitude"
+      ])
+      .where("LOWER(f.state) = :state", { state: 'abia' })
+      .andWhere("f.user_latitude IS NOT NULL AND f.user_longitude IS NOT NULL")
+      .getRawMany();
+
+    const response = {
+      state_name: "Abia",
+      total_count: farmers.length,
+      farmers: farmers.map(farmer => ({
+        farmer_id: farmer.farmer_id,
+        latitude: parseFloat(farmer.latitude),
+        longitude: parseFloat(farmer.longitude)
+      }))
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.error("Error fetching Abia farmers locations:", error);
+    res.status(500).json({ message: "Error fetching Abia farmers locations.", error: error.message });
+  }
+};
+
+// Get Abia State Farms Locations for Map Clustering
+const getAbiaFarmsLocations = async (req, res) => {
+  const farmRepository = AppDataSource.getRepository(Farm);
+
+  try {
+    const farms = await farmRepository
+      .createQueryBuilder("farm")
+      .select([
+        "farm.id AS farm_id",
+        "ST_Y(ST_Centroid(farm.geom)) AS centroid_latitude",
+        "ST_X(ST_Centroid(farm.geom)) AS centroid_longitude", 
+        "ST_AsText(farm.geom) AS geom"
+      ])
+      .innerJoin("farmer", "farmer", "farm.farmer_id::text = farmer.farmer_id::text")
+      .where("LOWER(farmer.state) = :state", { state: 'abia' })
+      .andWhere("farm.geom IS NOT NULL")
+      .getRawMany();
+
+    const response = {
+      state_name: "Abia",
+      total_count: farms.length,
+      farms: farms.map(farm => ({
+        farm_id: farm.farm_id,
+        centroid_latitude: parseFloat(farm.centroid_latitude),
+        centroid_longitude: parseFloat(farm.centroid_longitude),
+        geom: farm.geom
+      }))
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.error("Error fetching Abia farms locations:", error);
+    res.status(500).json({ message: "Error fetching Abia farms locations.", error: error.message });
+  }
+};
+
 module.exports = { 
   getFarmersCountByLocation, 
   getCropsByLocation,
   getAbiaStateSummary,
   getAbiaLGAsSummary,
   getAbiaStateBoundary,
-  getAbiaLGAsBoundaries
+  getAbiaLGAsBoundaries,
+  getAbiaFarmersLocations,
+  getAbiaFarmsLocations
 };

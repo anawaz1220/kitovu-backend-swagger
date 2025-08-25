@@ -6,6 +6,8 @@ const farmRoutes = require("./routes/farmRoutes");
 const farmerAffiliationRoutes = require("./routes/farmerAffiliationRoutes"); 
 const locationRoutes = require("./routes/locationRoutes");
 const advisoryRoutes = require("./routes/advisoryRoutes");
+const dropdownRoutes = require('./routes/dropdownRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
 const cors = require("cors");
 
 const swaggerSetup = require("./swagger/swagger");
@@ -19,8 +21,8 @@ const PORT = 3000;
 app.use(cors());
 
 // Serve static files
-app.use("/images", express.static(path.join(__dirname, "../uploads")));
-// app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+// app.use("/images", express.static(path.join(__dirname, "../images")));
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use(express.json());
 
 // Routes
@@ -30,6 +32,8 @@ app.use("/api", farmRoutes);
 app.use("/api", farmerAffiliationRoutes);
 app.use("/api", locationRoutes); 
 app.use("/api", advisoryRoutes);
+app.use('/api', dropdownRoutes);
+app.use('/api', analyticsRoutes);
 
 
 // Database connection

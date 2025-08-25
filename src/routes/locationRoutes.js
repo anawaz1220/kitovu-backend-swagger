@@ -7,7 +7,9 @@ const {
   getAbiaStateSummary,
   getAbiaLGAsSummary,
   getAbiaStateBoundary,
-  getAbiaLGAsBoundaries
+  getAbiaLGAsBoundaries,
+  getAbiaFarmersLocations,
+  getAbiaFarmsLocations
 } = require("../controllers/locationController");
 
 /**
@@ -328,5 +330,109 @@ router.get("/locations/abia-state/boundary", auth, getAbiaStateBoundary);
  *         description: Internal server error
  */
 router.get("/locations/abia-state/lgas/boundaries", auth, getAbiaLGAsBoundaries);
+
+/**
+ * @swagger
+ * /api/locations/abia-state/farmers-locations:
+ *   get:
+ *     summary: Get Abia state farmers locations for map clustering
+ *     tags: [Location]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Abia state farmers location data for map clustering
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 state_name:
+ *                   type: string
+ *                   example: Abia
+ *                 total_count:
+ *                   type: integer
+ *                   description: Total number of farmers with location data
+ *                   example: 1247
+ *                 farmers:
+ *                   type: array
+ *                   description: Array of farmer location data
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       farmer_id:
+ *                         type: string
+ *                         description: Unique farmer identifier
+ *                         example: F001
+ *                       latitude:
+ *                         type: number
+ *                         format: double
+ *                         description: Farmer location latitude
+ *                         example: 5.43435
+ *                       longitude:
+ *                         type: number
+ *                         format: double
+ *                         description: Farmer location longitude
+ *                         example: 7.50111
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/locations/abia-state/farmers-locations", auth, getAbiaFarmersLocations);
+
+/**
+ * @swagger
+ * /api/locations/abia-state/farms-locations:
+ *   get:
+ *     summary: Get Abia state farms locations for map clustering
+ *     tags: [Location]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Abia state farms location data for map clustering
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 state_name:
+ *                   type: string
+ *                   example: Abia
+ *                 total_count:
+ *                   type: integer
+ *                   description: Total number of farms with location data
+ *                   example: 892
+ *                 farms:
+ *                   type: array
+ *                   description: Array of farm location data
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       farm_id:
+ *                         type: string
+ *                         description: Unique farm identifier
+ *                         example: FM001
+ *                       centroid_latitude:
+ *                         type: number
+ *                         format: double
+ *                         description: Farm centroid latitude calculated from geometry
+ *                         example: 5.43567
+ *                       centroid_longitude:
+ *                         type: number
+ *                         format: double
+ *                         description: Farm centroid longitude calculated from geometry
+ *                         example: 7.50234
+ *                       geom:
+ *                         type: string
+ *                         description: Farm geometry in WKT format
+ *                         example: POLYGON((7.50234 5.43567, 7.50334 5.43567, 7.50334 5.43667, 7.50234 5.43667, 7.50234 5.43567))
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/locations/abia-state/farms-locations", auth, getAbiaFarmsLocations);
 
 module.exports = router;
