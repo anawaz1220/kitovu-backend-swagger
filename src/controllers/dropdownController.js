@@ -1,5 +1,6 @@
 const AppDataSource = require("../data-source");
 const Farmer = require("../entities/Farmer");
+const Farm = require("../entities/Farm");
 
 // Helper function to format state names for display
 const formatStateName = (stateName) => {
@@ -42,6 +43,16 @@ const formatCityName = (cityName) => {
   
   // Simple title case formatting
   return cityName.split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
+
+// Helper function to format crop names for display
+const formatCropName = (cropName) => {
+  if (!cropName) return cropName;
+  
+  // Simple title case formatting
+  return cropName.split(' ')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(' ');
 };
@@ -161,8 +172,37 @@ const getCities = async (req, res) => {
   }
 };
 
+// Get unique crops from farm records
+const getCrops = async (req, res) => {
+  const farmRepository = AppDataSource.getRepository(Farm);
+  
+  try {
+    const crops = await farmRepository
+      .createQueryBuilder("farm")
+      .select("DISTINCT LOWER(farm.crop_type)", "crop_type")
+      .where("farm.crop_type IS NOT NULL")
+      .andWhere("farm.crop_type != ''")
+      .orderBy("LOWER(farm.crop_type)", "ASC")
+      .getRawMany();
+
+    const formattedCrops = crops.map(item => ({
+      value: item.crop_type,
+      label: formatCropName(item.crop_type)
+    }));
+
+    res.status(200).json(formattedCrops);
+  } catch (error) {
+    console.error("Error fetching crops:", error);
+    res.status(500).json({ 
+      message: "Error fetching crops", 
+      error: error.message 
+    });
+  }
+};
+
 module.exports = {
   getStates,
   getLGAs,
-  getCities
+  getCities,
+  getCrops
 };

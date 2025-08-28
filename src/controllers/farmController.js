@@ -113,4 +113,62 @@ const getFarms = async (req, res) => {
   }
 };
 
-module.exports = { createFarm, getFarms };
+const updateFarm = async (req, res) => {
+  try {
+    const farmRepository = AppDataSource.getRepository(Farm);
+    const farm = await farmRepository.findOne({ where: { id: req.params.id } });
+    
+    if (!farm) {
+      return res.status(404).json({ message: "Farm not found" });
+    }
+
+    // Handle the update data
+    const updateData = { ...req.body };
+    
+    // Convert numeric fields
+    if (updateData.lease_years !== undefined) {
+      updateData.lease_years = updateData.lease_years ? parseInt(updateData.lease_years) : null;
+    }
+    if (updateData.lease_months !== undefined) {
+      updateData.lease_months = updateData.lease_months ? parseInt(updateData.lease_months) : null;
+    }
+    if (updateData.number_of_animals !== undefined) {
+      updateData.number_of_animals = updateData.number_of_animals ? parseInt(updateData.number_of_animals) : null;
+    }
+    if (updateData.farm_latitude !== undefined) {
+      updateData.farm_latitude = updateData.farm_latitude ? parseFloat(updateData.farm_latitude) : null;
+    }
+    if (updateData.farm_longitude !== undefined) {
+      updateData.farm_longitude = updateData.farm_longitude ? parseFloat(updateData.farm_longitude) : null;
+    }
+    if (updateData.distance_to_farm_km !== undefined) {
+      updateData.distance_to_farm_km = updateData.distance_to_farm_km ? parseFloat(updateData.distance_to_farm_km) : null;
+    }
+    if (updateData.crop_yield !== undefined) {
+      updateData.crop_yield = updateData.crop_yield ? parseFloat(updateData.crop_yield) : null;
+    }
+    if (updateData.livestock_yield !== undefined) {
+      updateData.livestock_yield = updateData.livestock_yield ? parseFloat(updateData.livestock_yield) : null;
+    }
+
+    // Recalculate area if geometry is updated
+    if (updateData.geom && updateData.geom.coordinates) {
+      try {
+        const area = calculateArea(updateData.geom);
+        updateData.calculated_area = (area / 4046.86).toFixed(2); // Convert to acres
+      } catch (geoError) {
+        console.error("Error calculating area from geometry:", geoError);
+        // Don't update calculated_area if geometry is invalid
+      }
+    }
+
+    farmRepository.merge(farm, updateData);
+    await farmRepository.save(farm);
+    res.json(farm);
+  } catch (error) {
+    console.error("Error updating farm:", error);
+    res.status(500).json({ message: "Error updating farm", error: error.message });
+  }
+};
+
+module.exports = { createFarm, getFarms, updateFarm };

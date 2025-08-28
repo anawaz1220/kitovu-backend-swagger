@@ -1,0 +1,100 @@
+for these below APIs, that renders data on frontend drawer, I want user to edit these details, so for that i wanted to make sure, these apis should handle editing functionality,
+
+so please do needful and ask me what needed from my side, but i need apis that can make edits of the files that are labeled as ediftable in thier end
+
+PAI-1:
+http://localhost:3000/api/farmers?farmer_id=75452df5-9763-4e06-a07c-ad0a490a7584
+{
+    "id": "fc7f1173-99b7-442d-b1e2-36cd4e896869",
+    "first_name": "Nwachukwu", (Editable)
+    "last_name": "Beatrice",(Editable)
+    "gender": "female",(Editable)
+    "date_of_birth": "1967-10-13",(Editable)
+    "phone_number": "08068960314",(Editable)
+    "alternate_phone_number": null,(Editable)
+    "street_address": "Umunkpeyi",(Editable)
+    "state": "Abia",(Editable)
+    "lga": "isiala_ngwa_north",(Editable)
+    "farmer_picture": "/uploads/1747470719114.jpg",(Editable)
+    "id_type": "national_id",(Editable)
+    "id_number": "32415107426",(Editable)
+    "id_document_picture": "/uploads/1747470735815.jpg",(Editable)
+    "created_at": "2025-05-17T15:19:08.000Z",
+    "updated_at": "2025-05-18T09:34:50.334Z",
+    "user_latitude": 5.3903496,(Editable)
+    "user_longitude": 7.4289959,(Editable)
+    "remarks": "This farm is measured in plots",(Editable)
+    "created_by": "chino236",
+    "farmer_id": "75452df5-9763-4e06-a07c-ad0a490a7584",
+    "validation_time": "2025-05-17T17:22:06.000Z",
+    "validation_status": "Approved",(Editable)
+    "validated_by": "maryamoyenike01",(Editable)
+    "education": "master_s_degree",(Editable)
+    "agricultural_training": false,(Editable)
+    "training_provider": null,(Editable)
+    "certificate_issued": null,(Editable)
+    "received_financing": false,(Editable)
+    "finance_provider": null,(Editable)
+    "finance_amount": null,(Editable)
+    "interest_rate": null,(Editable)
+    "financing_duration_years": null,(Editable)
+    "financing_duration_months": null,(Editable)
+    "ward": "Nbawsi/umuomainta",(Editable)
+    "member_of_cooperative": false,
+    "cooperative_name": null,(Editable)
+    "cooperative_activities": null,(Editable)
+    "marketing_channel": "Open Market",(Editable)
+    "offtaker_name": null(Editable)
+}
+
+API-2:
+http://localhost:3000/api/farms?farmer_id=75452df5-9763-4e06-a07c-ad0a490a7584
+[
+    {
+        "id": "922c6596-08c2-4785-ab67-2e4e8a9f69df",
+        "farmer_id": "75452df5-9763-4e06-a07c-ad0a490a7584",
+        "farm_id": 1,
+        "Draw_Farm": null,
+        "farm_type": "crop_farming",(Editable)
+        "ownership_status": "leased",(Editable)
+        "lease_years": 1,(Editable)
+        "lease_months": 0,(Editable)
+        "calculated_area": "0.03",
+        "crop_type": "cassava",(Editable)
+        "area": null,
+        "livestock_type": null,(Editable)
+        "number_of_animals": null,(Editable)
+        "farm_latitude": null,
+        "farm_longitude": null,
+        "geom": {
+            "type": "MultiPolygon",
+            "coordinates": [
+                [
+                    [
+                        [
+                            7.42902,
+                            5.390435
+                        ],
+                        [
+                            7.428806014,
+                            5.390477746
+                        ],
+                        [
+                            7.42887307,
+                            5.390581889
+                        ],
+                        [
+                            7.42902,
+                            5.390435
+                        ]
+                    ]
+                ]
+            ]
+        },
+        "created_at": "2025-05-17T15:19:08.000Z",
+        "updated_at": "2025-05-18T09:34:50.515Z",
+        "distance_to_farm_km": "0.50",(Editable)
+        "crop_yield": "15.00",(Editable)
+        "livestock_yield": null (Editable)
+    }
+]
