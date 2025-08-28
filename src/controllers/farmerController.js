@@ -114,15 +114,15 @@ const createFarmer = async (req, res) => {
 const updateFarmer = async (req, res) => {
   try {
     const farmerRepository = AppDataSource.getRepository(Farmer);
-    const farmer = await farmerRepository.findOne({ where: { id: req.params.id }});
+    const farmer = await farmerRepository.findOne({ where: { farmer_id: req.params.id }});
     if (!farmer) return res.status(404).json({ message: "Farmer not found" });
 
     // Update image URLs if new files are uploaded
     if (req.files && req.files["farmer_picture"]) {
-      farmer.farmer_picture = `/images/${req.files["farmer_picture"][0].filename}`;
+      farmer.farmer_picture = `/uploads/${req.files["farmer_picture"][0].filename}`;
     }
     if (req.files && req.files["id_document_picture"]) {
-      farmer.id_document_picture = `/images/${req.files["id_document_picture"][0].filename}`;
+      farmer.id_document_picture = `/uploads/${req.files["id_document_picture"][0].filename}`;
     }
 
     // Handle boolean and numeric fields
