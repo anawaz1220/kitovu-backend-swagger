@@ -4,7 +4,8 @@ const auth = require("../middleware/auth");
 const { 
   getStates, 
   getLGAs, 
-  getCities 
+  getCities,
+  getCrops 
 } = require("../controllers/dropdownController");
 
 /**
@@ -144,5 +145,38 @@ router.get("/dropdowns/lgas", auth, getLGAs);
  *         description: Internal server error
  */
 router.get("/dropdowns/cities", auth, getCities);
+
+/**
+ * @swagger
+ * /api/dropdowns/crops:
+ *   get:
+ *     summary: Get unique list of crops from farm records
+ *     tags: [Dropdowns]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of unique crops
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   value:
+ *                     type: string
+ *                     description: Crop type value
+ *                     example: "cassava"
+ *                   label:
+ *                     type: string
+ *                     description: Crop type display name
+ *                     example: "Cassava"
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/dropdowns/crops", auth, getCrops);
 
 module.exports = router;
