@@ -3,7 +3,7 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/auth");
 
-const { createFarm, getFarms } = require("../controllers/farmController");
+const { createFarm, getFarms, updateFarm } = require("../controllers/farmController");
 router.use(auth);
 
 /**
@@ -168,5 +168,100 @@ router.post("/farms", auth, createFarm);
  *         description: Error fetching farms
  */
 router.get("/farms", getFarms);
+
+/**
+ * @swagger
+ * /api/farms/{id}:
+ *   put:
+ *     summary: Update a farm by ID
+ *     tags: [Farms]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Farm ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               farm_type:
+ *                 type: string
+ *                 description: Type of the farm (e.g., crop_farming, livestock)
+ *                 example: "crop_farming"
+ *               ownership_status:
+ *                 type: string
+ *                 description: Ownership status (e.g., owned, leased)
+ *                 example: "leased"
+ *               lease_years:
+ *                 type: integer
+ *                 description: Number of years on lease (if applicable)
+ *                 example: 2
+ *               lease_months:
+ *                 type: integer
+ *                 description: Number of months on lease (if applicable)
+ *                 example: 6
+ *               crop_type:
+ *                 type: string
+ *                 description: Type of crops grown on the farm
+ *                 example: "cassava"
+ *               livestock_type:
+ *                 type: string
+ *                 description: Type of livestock present on the farm
+ *                 example: "cattle"
+ *               number_of_animals:
+ *                 type: integer
+ *                 description: Number of animals on the farm (if applicable)
+ *                 example: 15
+ *               farm_latitude:
+ *                 type: number
+ *                 format: float
+ *                 description: Latitude coordinate of the farm's central point
+ *                 example: 5.3903496
+ *               farm_longitude:
+ *                 type: number
+ *                 format: float
+ *                 description: Longitude coordinate of the farm's central point
+ *                 example: 7.4289959
+ *               distance_to_farm_km:
+ *                 type: number
+ *                 format: float
+ *                 description: Distance to the farm in kilometers
+ *                 example: 0.50
+ *               crop_yield:
+ *                 type: number
+ *                 format: float
+ *                 description: Crop yield information
+ *                 example: 15.00
+ *               livestock_yield:
+ *                 type: number
+ *                 format: float
+ *                 description: Livestock yield information
+ *                 example: null
+ *               geom:
+ *                 type: object
+ *                 description: GeoJSON geometry for the farm boundary
+ *                 example:
+ *                   type: "MultiPolygon"
+ *                   coordinates: [[[7.42902, 5.390435], [7.428806014, 5.390477746]]]
+ *     responses:
+ *       200:
+ *         description: Farm updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Farm'
+ *       404:
+ *         description: Farm not found
+ *       500:
+ *         description: Error updating farm
+ */
+router.put("/farms/:id", updateFarm);
 
 module.exports = router;
